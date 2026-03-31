@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Haftalik Hisobot Monitoringi</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#f0f4f8}
+.tabs{display:flex;gap:0;background:#1e293b;padding:0 24px}
+.tab-btn{padding:14px 24px;font-size:13px;font-weight:500;color:#94a3b8;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;transition:all .2s}
+.tab-btn.active{color:#fff;border-bottom-color:#3b82f6}
+.tab-btn:hover:not(.active){color:#cbd5e1}
+.tab-content{display:none;padding:24px;max-width:1100px;margin:0 auto}
+.tab-content.active{display:block}
+
+/* ── INPUT PANEL ── */
+.input-section{background:#fff;border-radius:14px;border:1px solid #e2e8f0;padding:20px;margin-bottom:20px}
+.input-section h3{font-size:13px;font-weight:600;color:#334155;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #f1f5f9;text-transform:uppercase;letter-spacing:.05em}
+.input-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.input-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inp-group{display:flex;flex-direction:column;gap:5px}
+.inp-group label{font-size:11px;color:#64748b;font-weight:500}
+.inp-group input{padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:'DM Mono',monospace;color:#0f172a;outline:none;transition:border .15s}
+.inp-group input:focus{border-color:#3b82f6}
+.inp-group input.green{border-left:3px solid #22c55e}
+.inp-group input.purple{border-left:3px solid #a855f7}
+
+.filial-table-wrap{overflow-x:auto}
+.filial-input-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:900px}
+.filial-input-tbl th{padding:8px 10px;background:#f8fafc;color:#64748b;font-weight:500;font-size:11px;border-bottom:1px solid #e2e8f0;text-align:center;white-space:nowrap}
+.filial-input-tbl th:first-child{text-align:left}
+.filial-input-tbl td{padding:4px 5px;border-bottom:1px solid #f8fafc}
+.filial-input-tbl tr:nth-child(even) td{background:#fafafa}
+.filial-input-tbl input{width:100%;padding:5px 8px;border:1px solid #e8ecf0;border-radius:6px;font-size:11px;font-family:'DM Mono',monospace;text-align:right;outline:none}
+.filial-input-tbl input:focus{border-color:#3b82f6;background:#eff6ff}
+.filial-input-tbl td:first-child{color:#334155;font-size:11px;padding-left:10px;min-width:200px}
+.filial-input-tbl .col-name{width:34px;font-weight:600;color:#475569;font-size:10px}
+
+.save-btn{display:flex;align-items:center;gap:8px;padding:11px 24px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin:20px 0 0;transition:background .2s}
+.save-btn:hover{background:#2563eb}
+.save-btn svg{width:16px;height:16px}
+.saved-badge{display:none;align-items:center;gap:6px;padding:11px 16px;background:#dcfce7;color:#16a34a;border-radius:10px;font-size:13px;font-weight:500;margin:20px 0 0}
+
+/* ── PASTE TABLE ── */
+.paste-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.paste-tbl th{padding:9px 12px;background:#f8fafc;color:#64748b;font-weight:500;font-size:11px;border-bottom:2px solid #e2e8f0;text-align:right;white-space:nowrap}
+.paste-tbl th:first-child{text-align:left}
+.paste-tbl td{padding:4px 6px;border-bottom:1px solid #f1f5f9}
+.paste-tbl tr:nth-child(even) td{background:#fafafa}
+.paste-tbl .row-lbl{font-size:12px;color:#334155;padding-left:4px;font-weight:500}
+.paste-tbl input.paste-cell{width:100%;min-width:130px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;outline:none;color:#0f172a;transition:border .15s,background .15s}
+.paste-tbl input.paste-cell:focus{border-color:#3b82f6;background:#eff6ff}
+.paste-tbl input.paste-cell.green{border-left:3px solid #22c55e}
+.paste-tbl input.paste-cell.purple{border-left:3px solid #a855f7}
+.paste-tbl input.paste-cell.flashed{background:#fefce8;border-color:#fbbf24}
+
+/* ── DASHBOARD ── */
+.dash{max-width:1100px;margin:0 auto}
+.page-title{font-size:24px;font-weight:600;color:#0f172a;margin-bottom:4px}
+.page-sub{font-size:13px;color:#64748b;margin-bottom:24px}
+.section-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-bottom:12px;margin-top:24px}
+.section-label:first-child{margin-top:0}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid #e2e8f0}
+.kpi-lbl{font-size:11px;color:#94a3b8;margin-bottom:4px}
+.kpi-num{font-size:20px;font-weight:600;color:#0f172a;font-family:'DM Mono',monospace}
+.kpi-sub{font-size:11px;color:#94a3b8;margin-top:2px}
+.kpi.accent-orange .kpi-num{color:#ea580c}
+.week-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.week-card{border-radius:16px;padding:22px;border:1.5px solid}
+.week-card.this{background:#f0fdf4;border-color:#86efac}
+.week-card.prev{background:#faf5ff;border-color:#d8b4fe}
+.wk-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.wk-title{font-size:15px;font-weight:600}
+.week-card.this .wk-title{color:#16a34a}
+.week-card.prev .wk-title{color:#7c3aed}
+.wk-date{font-size:11px;color:#94a3b8;text-align:right;line-height:1.6}
+.wk-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06)}
+.wk-row:last-of-type{border-bottom:none}
+.wk-label{font-size:13px;color:#475569}
+.wk-val{font-size:13px;font-weight:500;color:#0f172a;font-family:'DM Mono',monospace}
+.badge-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.badge{border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+.badge.green{background:#dcfce7}
+.badge.orange{background:#fff7ed}
+.badge-lbl{font-size:11px;color:#475569;line-height:1.5}
+.badge.green .badge-num{font-size:16px;font-weight:600;color:#16a34a;font-family:'DM Mono',monospace}
+.badge.orange .badge-num{font-size:16px;font-weight:600;color:#ea580c;font-family:'DM Mono',monospace}
+.charts-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.chart-card{background:#fff;border-radius:14px;padding:20px;border:1px solid #e2e8f0}
+.chart-title{font-size:13px;font-weight:500;color:#334155;margin-bottom:14px}
+.bar-item{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-name{font-size:11px;color:#64748b;width:64px;flex-shrink:0}
+.bar-track{flex:1;background:#f1f5f9;border-radius:4px;height:24px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;transition:width .5s ease}
+.bar-fill span{font-size:10px;font-weight:600;color:#fff;font-family:'DM Mono',monospace;white-space:nowrap}
+.table-row-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.table-card{background:#fff;border-radius:14px;padding:20px;border:1px solid #e2e8f0}
+.table-card-full{background:#fff;border-radius:14px;padding:20px;border:1px solid #e2e8f0}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:9px 11px;background:#f8fafc;color:#64748b;font-weight:500;font-size:11px;border-bottom:1px solid #e2e8f0}
+.tbl th:not(:first-child){text-align:right}
+.tbl td{padding:8px 11px;border-bottom:1px solid #f1f5f9;color:#334155}
+.tbl td:not(:first-child){text-align:right;font-family:'DM Mono',monospace;font-size:11px}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.total td{background:#fefce8;font-weight:600;color:#0f172a;border-top:1.5px solid #fde047}
+.tbl tr:hover:not(.total) td{background:#fafafa}
+.pie-wrap{display:flex;align-items:center;gap:20px;margin-top:8px}
+.legend{display:flex;flex-direction:column;gap:7px}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:11px;color:#475569}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.lbar-item{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.lbar-name{font-size:11px;color:#64748b;width:40px;flex-shrink:0;text-align:right}
+.lbar-track{flex:1;background:#f1f5f9;border-radius:4px;height:18px;overflow:hidden}
+.lbar-fill{height:100%;background:#3b82f6;border-radius:4px;transition:width .4s ease}
+.lbar-val{font-size:10px;font-family:'DM Mono',monospace;color:#475569;width:72px;text-align:right}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.pill-green{background:#dcfce7;color:#16a34a}
+.pill-orange{background:#fff7ed;color:#ea580c}
+.pill-blue{background:#eff6ff;color:#2563eb}
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Monitoring</button>
+  <button class="tab-btn" onclick="switchTab('input')">✏️ Ma'lumotlarni yangilash</button>
+</div>
+
+<!-- ═══════════════ INPUT TAB ═══════════════ -->
+<div id="tab-input" class="tab-content">
+
+  <!-- PASTE MODE HINT -->
+  <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px">
+    <div style="font-size:20px;line-height:1">📋</div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#1d4ed8;margin-bottom:4px">Excel'dan copy-paste qilish</div>
+      <div style="font-size:12px;color:#3b82f6;line-height:1.6">
+        Exceldan kerakli ustunlarni belgilab <b>Ctrl+C</b> → pastadagi jadvalning birinchi katakchasini bosing → <b>Ctrl+V</b> bosing. Ma'lumotlar avtomatik to'ldiriladi.
+      </div>
+    </div>
+  </div>
+
+  <!-- HAFTA SANALARI -->
+  <div class="input-section">
+    <h3>📅 Hafta sanalari</h3>
+    <div class="input-grid-2">
+      <div class="inp-group"><label>Shu hafta (boshlanish - tugash)</label><input id="i_date_this" class="green" value="16.03.2026 - 22.03.2026"></div>
+      <div class="inp-group"><label>O'tgan hafta (boshlanish - tugash)</label><input id="i_date_prev" class="purple" value="09.03.2026 - 15.03.2026"></div>
+    </div>
+  </div>
+
+  <!-- HAFTALIK KO'RSATKICHLAR — PASTE TABLE -->
+  <div class="input-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f1f5f9">
+      <h3 style="margin:0;border:none;padding:0">📦 Haftalik asosiy ko'rsatkichlar</h3>
+      <span style="font-size:11px;color:#94a3b8">Excel'dan 2 ustun (shu hafta | o'tgan hafta) ko'chirib yapishtirishingiz mumkin</span>
+    </div>
+    <div class="paste-tbl-wrap" style="overflow-x:auto">
+      <table class="paste-tbl" id="weekly-paste-tbl">
+        <thead>
+          <tr>
+            <th style="text-align:left;min-width:220px">Ko'rsatkich</th>
+            <th style="color:#16a34a">🟢 Shu hafta</th>
+            <th style="color:#7c3aed">🟣 O'tgan hafta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-key="xar"><td class="row-lbl">Xarajatlar (so'm)</td><td><input id="i_xar_this" class="green paste-cell" value="141310948" data-row="0" data-col="0"></td><td><input id="i_xar_prev" class="purple paste-cell" value="180200000" data-row="0" data-col="1"></td></tr>
+          <tr data-key="log"><td class="row-lbl">Logistika (so'm)</td><td><input id="i_log_this" class="green paste-cell" value="48340011" data-row="1" data-col="0"></td><td><input id="i_log_prev" class="purple paste-cell" value="94350000" data-row="1" data-col="1"></td></tr>
+          <tr data-key="tovar"><td class="row-lbl">Tovar soni (dona)</td><td><input id="i_tovar_this" class="green paste-cell" value="267866" data-row="2" data-col="0"></td><td><input id="i_tovar_prev" class="purple paste-cell" value="439323" data-row="2" data-col="1"></td></tr>
+          <tr data-key="karobki"><td class="row-lbl">Karobki soni</td><td><input id="i_karobki" class="green paste-cell" value="1650" data-row="3" data-col="0"></td><td><input class="paste-cell" placeholder="—" data-row="3" data-col="1"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- XARAJATLAR BO'LIMLARI — PASTE TABLE -->
+  <div class="input-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f1f5f9">
+      <h3 style="margin:0;border:none;padding:0">🏢 Xarajatlar bo'limlari (shu hafta)</h3>
+      <span style="font-size:11px;color:#94a3b8">Exceldan 1 ustun (summa) ko'chirib yapishtirishingiz mumkin</span>
+    </div>
+    <div class="paste-tbl-wrap" style="overflow-x:auto">
+      <table class="paste-tbl" id="dept-paste-tbl">
+        <thead><tr><th style="text-align:left;min-width:240px">Bo'lim</th><th>Summa (so'm)</th></tr></thead>
+        <tbody>
+          <tr><td class="row-lbl">Операционный отдел</td><td><input id="i_d1" class="paste-cell" value="79843308" data-row="0" data-col="0"></td></tr>
+          <tr><td class="row-lbl">Административный отдел</td><td><input id="i_d2" class="paste-cell" value="6769231" data-row="1" data-col="0"></td></tr>
+          <tr><td class="row-lbl">Питания</td><td><input id="i_d3" class="paste-cell" value="12389000" data-row="2" data-col="0"></td></tr>
+          <tr><td class="row-lbl">Аренда РЦ</td><td><input id="i_d4" class="paste-cell" value="38298694" data-row="3" data-col="0"></td></tr>
+          <tr><td class="row-lbl">Коммунальные расходы</td><td><input id="i_d5" class="paste-cell" value="4010715" data-row="4" data-col="0"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FILIALLAR — PASTE TABLE -->
+  <div class="input-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f1f5f9">
+      <h3 style="margin:0;border:none;padding:0">🚚 Filiallar — Logistika va tovar ma'lumotlari</h3>
+      <span style="font-size:11px;color:#94a3b8">Exceldan ustunlarni belgilab to'g'ridan-to'g'ri yapishtirishingiz mumkin</span>
+    </div>
+    <div class="filial-table-wrap">
+      <table class="filial-input-tbl">
+        <thead>
+          <tr>
+            <th>Filial nomi</th>
+            <th>Sebestoimost</th>
+            <th>Karobki</th>
+            <th>Tovar soni</th>
+            <th>Logistika</th>
+            <th class="col-name" style="color:#3b82f6">FMCG</th>
+            <th class="col-name" style="color:#f97316">Igr.</th>
+            <th class="col-name" style="color:#22c55e">Kants.</th>
+            <th class="col-name" style="color:#ef4444">Kiyim</th>
+          </tr>
+        </thead>
+        <tbody id="filial-input-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- KATEGORIYALAR — PASTE TABLE -->
+  <div class="input-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f1f5f9">
+      <h3 style="margin:0;border:none;padding:0">👗 Kategoriyalar bo'yicha tovar soni</h3>
+      <span style="font-size:11px;color:#94a3b8">Exceldan 1 ustun (tovar soni) ko'chirib yapishtirishingiz mumkin</span>
+    </div>
+    <div class="paste-tbl-wrap" style="overflow-x:auto">
+      <table class="paste-tbl" id="kat-paste-tbl">
+        <thead><tr><th style="text-align:left;min-width:160px">Kategoriya</th><th>Tovar soni</th></tr></thead>
+        <tbody>
+          <tr><td class="row-lbl">БЛУЗКИ</td><td><input id="k_bluzki" class="paste-cell" value="1548" data-row="0" data-col="0"></td></tr>
+          <tr><td class="row-lbl">БОСОНОЖКИ</td><td><input id="k_boson" class="paste-cell" value="8919" data-row="1" data-col="0"></td></tr>
+          <tr><td class="row-lbl">КЕПКИ</td><td><input id="k_kepki" class="paste-cell" value="12083" data-row="2" data-col="0"></td></tr>
+          <tr><td class="row-lbl">КОФТЫ</td><td><input id="k_kofty" class="paste-cell" value="2296" data-row="3" data-col="0"></td></tr>
+          <tr><td class="row-lbl">ПАНАМЫ</td><td><input id="k_panamy" class="paste-cell" value="10" data-row="4" data-col="0"></td></tr>
+          <tr><td class="row-lbl">ПЛАТЬЯ</td><td><input id="k_platya" class="paste-cell" value="4039" data-row="5" data-col="0"></td></tr>
+          <tr><td class="row-lbl">ПОЛО</td><td><input id="k_polo" class="paste-cell" value="842" data-row="6" data-col="0"></td></tr>
+          <tr><td class="row-lbl">РУБАШКИ</td><td><input id="k_rubashki" class="paste-cell" value="6900" data-row="7" data-col="0"></td></tr>
+          <tr><td class="row-lbl">ТАПОЧКИ</td><td><input id="k_tapochki" class="paste-cell" value="6064" data-row="8" data-col="0"></td></tr>
+          <tr><td class="row-lbl">ФУТБОЛКИ</td><td><input id="k_futbolki" class="paste-cell" value="49330" data-row="9" data-col="0"></td></tr>
+          <tr><td class="row-lbl">ШОРТЫ</td><td><input id="k_shorty" class="paste-cell" value="7056" data-row="10" data-col="0"></td></tr>
+          <tr><td class="row-lbl">ЮБКИ</td><td><input id="k_yubki" class="paste-cell" value="1487" data-row="11" data-col="0"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px">
+    <button class="save-btn" onclick="applyData()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+      Saqlash va yangilash
+    </button>
+    <div class="saved-badge" id="saved-badge">
+      ✓ Monitoring yangilandi!
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DASHBOARD TAB ═══════════════ -->
+<div id="tab-dashboard" class="tab-content active">
+<div class="dash">
+
+  <div class="page-title">Haftalik Hisobot Monitoringi</div>
+  <div class="page-sub" id="d_sub">2 xaftalik grafik</div>
+
+  <div class="section-label">Joriy ko'rsatkichlar</div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-lbl">Jami tovar</div><div class="kpi-num" id="d_tovar">—</div><div class="kpi-sub">dona</div></div>
+    <div class="kpi"><div class="kpi-lbl">Xarajatlar (logistikasiz)</div><div class="kpi-num" id="d_xar">—</div><div class="kpi-sub" id="d_xar_sub">so'm</div></div>
+    <div class="kpi"><div class="kpi-lbl">Logistika xarajati</div><div class="kpi-num" id="d_log">—</div><div class="kpi-sub">so'm</div></div>
+    <div class="kpi accent-orange"><div class="kpi-lbl">1 tovar rasxodi (+log)</div><div class="kpi-num" id="d_r_log">—</div><div class="kpi-sub" id="d_r_nolog">logistikasiz: —</div></div>
+  </div>
+
+  <div class="section-label">Haftalik taqqoslash</div>
+  <div class="week-grid">
+    <div class="week-card this">
+      <div class="wk-header"><div class="wk-title">Shu hafta</div><div class="wk-date" id="d_date_this">—</div></div>
+      <div class="wk-row"><span class="wk-label">Xarajatlar</span><span class="wk-val" id="w_xar_this">—</span></div>
+      <div class="wk-row"><span class="wk-label">Logistika</span><span class="wk-val" id="w_log_this">—</span></div>
+      <div class="wk-row"><span class="wk-label">Tovar soni</span><span class="wk-val" id="w_tovar_this">—</span></div>
+      <div class="badge-row">
+        <div class="badge green"><div><div class="badge-lbl">Logistikasiz</div><div class="badge-lbl" style="font-size:10px">1 tovar rasxodi</div></div><div class="badge-num" id="b_nolog_this">—</div></div>
+        <div class="badge orange"><div><div class="badge-lbl">Logistika bilan</div><div class="badge-lbl" style="font-size:10px">1 tovar rasxodi</div></div><div class="badge-num" id="b_log_this">—</div></div>
+      </div>
+    </div>
+    <div class="week-card prev">
+      <div class="wk-header"><div class="wk-title">O'tgan hafta</div><div class="wk-date" id="d_date_prev">—</div></div>
+      <div class="wk-row"><span class="wk-label">Xarajatlar</span><span class="wk-val" id="w_xar_prev">—</span></div>
+      <div class="wk-row"><span class="wk-label">Logistika</span><span class="wk-val" id="w_log_prev">—</span></div>
+      <div class="wk-row"><span class="wk-label">Tovar soni</span><span class="wk-val" id="w_tovar_prev">—</span></div>
+      <div class="badge-row">
+        <div class="badge green"><div><div class="badge-lbl">Logistikasiz</div><div class="badge-lbl" style="font-size:10px">1 tovar rasxodi</div></div><div class="badge-num" id="b_nolog_prev">—</div></div>
+        <div class="badge orange"><div><div class="badge-lbl">Logistika bilan</div><div class="badge-lbl" style="font-size:10px">1 tovar rasxodi</div></div><div class="badge-num" id="b_log_prev">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Grafiklar</div>
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">Xarajatlar farqi</div>
+      <div id="chart_xar"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Logistika farqi</div>
+      <div id="chart_log"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Bir tovar rasxodi</div>
+      <div id="chart_ratio"></div>
+    </div>
+  </div>
+
+  <div class="section-label">Xarajatlar taqsimoti</div>
+  <div class="table-row-2">
+    <div class="table-card">
+      <div class="chart-title">Xarajatlar</div>
+      <table class="tbl">
+        <thead><tr><th>Bo'limlar</th><th>Kun</th><th>Summa</th></tr></thead>
+        <tbody id="dept-tbody"></tbody>
+      </table>
+    </div>
+    <div class="table-card">
+      <div class="chart-title">Xarajatlar taqsimoti</div>
+      <div class="pie-wrap">
+        <svg id="pie-xar" width="130" height="130" viewBox="0 0 130 130"></svg>
+        <div class="legend" id="legend-xar"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Xarajatlarning tovar soniga nisbati</div>
+  <div class="table-card-full">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px" id="ratio-cards"></div>
+    <div id="ratio-bars"></div>
+  </div>
+
+  <div class="section-label">Logistika summa — filiallar bo'yicha</div>
+  <div class="table-card-full">
+    <table class="tbl"><thead><tr><th>Filial</th><th>Sebestoimost</th><th>Karobki</th><th>Tovar soni</th><th>Logistika</th></tr></thead>
+    <tbody id="filial-dash-tbody"></tbody></table>
+  </div>
+
+  <div class="section-label">Filiallar bo'yicha logistika summasi</div>
+  <div class="table-card-full" id="lbar-chart"></div>
+
+  <div class="section-label">Logistika otdellar kesimida</div>
+  <div class="table-row-2">
+    <div class="table-card">
+      <div class="pie-wrap">
+        <svg id="pie-otdel" width="130" height="130" viewBox="0 0 130 130"></svg>
+        <div class="legend" id="legend-otdel"></div>
+      </div>
+    </div>
+    <div class="table-card">
+      <table class="tbl"><thead><tr><th>Otdel</th><th>Tovar soni</th><th>Ulush</th></tr></thead>
+      <tbody id="otdel-tbl-body"></tbody></table>
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-top:24px">Kategoriyalar bo'yicha tovar soni</div>
+  <div class="table-row-2" style="margin-bottom:24px">
+    <div class="table-card">
+      <table class="tbl">
+        <thead><tr><th>Kategoriya</th><th>Kol-vo Tovar</th><th>Ulush</th></tr></thead>
+        <tbody id="kat-tbody"></tbody>
+      </table>
+    </div>
+    <div class="table-card">
+      <div class="chart-title">Kategoriyalar taqsimoti</div>
+      <div id="kat-bars"></div>
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-top:24px">Filiallar — otdellar kesimida tovar soni</div>
+  <div class="table-card-full" style="margin-bottom:24px">
+    <table class="tbl" style="font-size:11px">
+      <thead><tr><th>Filial</th><th>FMCG</th><th>Igr. va Riv.</th><th>Kantstovary</th><th>Kiyim va O.K.</th><th>Jami</th></tr></thead>
+      <tbody id="otdel-filial-tbody"></tbody>
+    </table>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ── DEFAULT DATA ──────────────────────────────────────────────
+const FILIAL_NAMES = [
+  "(S01) БУХАРА 5-МКР","(S02) БУХАРА ВОКЗАЛ","(S03) БУХАРА ЧИНАРМОЛЛ",
+  "(S04) НАВОИ ГОР УНИВЕРСИТЕТ","(S05) САМАРКАНД ТЕХНОМАРТ","(S06) УРГЕНЧ МЕДИАПАРК",
+  "(S07) КАРШИ ГОРГАЗ","(S08) ЗАРАФШОН ИДЕЯ","(S09) КОКАНД МЕДИА ПАРК",
+  "(S10) АНДИЖАН УЗБЕГИМ МОЛЛ","(S11) ФЕРГАНА ДУСТЛИК ОТЕЛЬ","(S12) НАМАНГАН ОХУНБАБАЕВ СТР",
+  "(S13) ФАРГОНА ЗА КАНАЛ","(S14) ЧИРЧИК ТЦ","(S15) КОМПАСС МОЛЛ",
+  "(S16) ТАШКЕНТ СЕРГИЛИ","(S17) УРГЕНЧ МАЛЛ","(S18) ХИВА МАРИО",
+  "(S19) ТУРКУЛЬ","(S20) ШАХРИХАН","(S21) АНГРЕН","(S23) НОВЫЙ МАГАЗИН 2026-6"
+];
+const DEFAULT_FILIALS = [
+  [174960989,58,9100,2150000,300,50,1200,7550],
+  [561597928,129,21282,5300000,2000,2500,3000,13782],
+  [213585705,71,11242,1950000,50,450,1200,9542],
+  [486193947,107,21236,4250000,500,1500,700,18536],
+  [463215051,123,16725,3700002,1500,1200,800,13225],
+  [311367309,82,13384,4100000,80,850,200,12254],
+  [420234635,98,14833,3700001,900,1800,2000,10133],
+  [239984939,68,10783,2300000,250,1100,1500,7933],
+  [303727467,79,11728,2450001,600,750,150,10228],
+  [274654863,74,10940,1900000,400,650,120,9770],
+  [204727697,57,8456,1500000,700,550,100,7106],
+  [412122892,92,14834,2850001,1200,1300,800,11534],
+  [129141426,33,5723,1100001,350,200,50,5123],
+  [324115989,93,14164,1390001,600,900,1100,11564],
+  [451954069,103,19335,1650002,150,1400,700,17085],
+  [595046002,120,23485,950002,500,3000,2500,17485],
+  [226782765,64,11187,2600000,100,650,300,10137],
+  [100810983,31,5028,800000,1200,350,50,3428],
+  [132012592,30,4892,900000,800,250,30,3812],
+  [61545377,8,2412,600000,400,200,100,1712],
+  [294683614,95,10710,1650000,900,1100,800,7910],
+  [94229512,35,6387,550000,650,600,500,4637]
+];
+const DEPT_NAMES = ["Операционный отдел","Административный отдел","Питания","Аренда РЦ","Коммунальные расходы"];
+const PIE_COLORS = ["#3b82f6","#ef4444","#eab308","#8b5cf6","#22c55e","#f97316"];
+const OTDEL_NAMES = ["FMCG","Игрушки и развитие","Канцтовары","Одежда и обувь"];
+const OTDEL_COLORS = ["#3b82f6","#f97316","#22c55e","#ef4444"];
+const KAT_NAMES = ["БЛУЗКИ","БОСОНОЖКИ","КЕПКИ","КОФТЫ","ПАНАМЫ","ПЛАТЬЯ","ПОЛО","РУБАШКИ","ТАПОЧКИ","ФУТБОЛКИ","ШОРТЫ","ЮБКИ"];
+const KAT_IDS   = ["k_bluzki","k_boson","k_kepki","k_kofty","k_panamy","k_platya","k_polo","k_rubashki","k_tapochki","k_futbolki","k_shorty","k_yubki"];
+const KAT_COLORS= ["#3b82f6","#f97316","#22c55e","#a855f7","#ef4444","#eab308","#14b8a6","#ec4899","#84cc16","#f43f5e","#06b6d4","#8b5cf6"];
+
+const fmt = n => Math.round(n).toLocaleString('uz-UZ');
+const fmtM = n => (n/1000000).toFixed(2)+'M';
+
+// ── BUILD INPUT TABLE ─────────────────────────────────────────
+function buildInputTable(){
+  const tbody = document.getElementById('filial-input-body');
+  tbody.innerHTML = '';
+  FILIAL_NAMES.forEach((name, i) => {
+    const d = DEFAULT_FILIALS[i];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${name}</td>
+      <td><input class="fi" data-i="${i}" data-c="0" value="${d[0]}"></td>
+      <td><input class="fi" data-i="${i}" data-c="1" value="${d[1]}"></td>
+      <td><input class="fi" data-i="${i}" data-c="2" value="${d[2]}"></td>
+      <td><input class="fi" data-i="${i}" data-c="3" value="${d[3]}"></td>
+      <td><input class="fi" data-i="${i}" data-c="4" value="${d[4]}" style="border-color:#bfdbfe"></td>
+      <td><input class="fi" data-i="${i}" data-c="5" value="${d[5]}" style="border-color:#fed7aa"></td>
+      <td><input class="fi" data-i="${i}" data-c="6" value="${d[6]}" style="border-color:#bbf7d0"></td>
+      <td><input class="fi" data-i="${i}" data-c="7" value="${d[7]}" style="border-color:#fecaca"></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── GET DATA FROM INPUTS ──────────────────────────────────────
+function getData(){
+  const g = id => parseFloat(document.getElementById(id).value.replace(/\s/g,''))||0;
+  const katVals = KAT_IDS.map(id=>parseFloat(document.getElementById(id).value.replace(/\s/g,''))||0);
+  const filials = FILIAL_NAMES.map((_, i) => {
+    return Array.from({length:8}, (_,c) => {
+      const el = document.querySelector(`.fi[data-i="${i}"][data-c="${c}"]`);
+      return el ? (parseFloat(el.value.replace(/\s/g,''))||0) : DEFAULT_FILIALS[i][c];
+    });
+  });
+  return {
+    date_this: document.getElementById('i_date_this').value,
+    date_prev: document.getElementById('i_date_prev').value,
+    xar_this: g('i_xar_this'), log_this: g('i_log_this'), tovar_this: g('i_tovar_this'),
+    xar_prev: g('i_xar_prev'), log_prev: g('i_log_prev'), tovar_prev: g('i_tovar_prev'),
+    karobki: g('i_karobki'),
+    depts: [g('i_d1'),g('i_d2'),g('i_d3'),g('i_d4'),g('i_d5')],
+    filials,
+    katVals
+  };
+}
+
+// ── PIE CHART SVG ─────────────────────────────────────────────
+function drawPie(svgId, values, colors, cx=65, cy=65, r=58, innerR=32){
+  const svg = document.getElementById(svgId);
+  if(!svg) return;
+  const total = values.reduce((a,b)=>a+b,0);
+  if(!total){svg.innerHTML='';return;}
+  svg.innerHTML = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#f1f5f9"/>`;
+  let angle = -Math.PI/2;
+  values.forEach((v,i) => {
+    const slice = (v/total)*2*Math.PI;
+    const x1 = cx + r*Math.cos(angle), y1 = cy + r*Math.sin(angle);
+    angle += slice;
+    const x2 = cx + r*Math.cos(angle), y2 = cy + r*Math.sin(angle);
+    const large = slice > Math.PI ? 1 : 0;
+    svg.innerHTML += `<path d="M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${colors[i]}"/>`;
+  });
+  svg.innerHTML += `<circle cx="${cx}" cy="${cy}" r="${innerR}" fill="#fff"/>`;
+}
+
+// ── BAR ───────────────────────────────────────────────────────
+function barHTML(label, value, max, color, labelStyle=''){
+  const pct = max > 0 ? Math.round(value/max*100) : 0;
+  return `<div class="bar-item">
+    <div class="bar-name" style="font-size:11px;${labelStyle}">${label}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"><span>${fmtM(value)}</span></div></div>
+  </div>`;
+}
+
+// ── RENDER DASHBOARD ──────────────────────────────────────────
+function render(d){
+  const r_nolog_this = d.tovar_this > 0 ? Math.round(d.xar_this/d.tovar_this) : 0;
+  const r_log_this   = d.tovar_this > 0 ? Math.round((d.xar_this+d.log_this)/d.tovar_this) : 0;
+  const r_nolog_prev = d.tovar_prev > 0 ? Math.round(d.xar_prev/d.tovar_prev) : 0;
+  const r_log_prev   = d.tovar_prev > 0 ? Math.round((d.xar_prev+d.log_prev)/d.tovar_prev) : 0;
+
+  // KPI
+  document.getElementById('d_sub').textContent = `2 xaftalik grafik · ${d.date_this}`;
+  document.getElementById('d_tovar').textContent = fmt(d.tovar_this);
+  document.getElementById('d_xar').textContent = fmtM(d.xar_this);
+  document.getElementById('d_xar_sub').textContent = `so'm · ${fmt(d.karobki)} karobki`;
+  document.getElementById('d_log').textContent = fmtM(d.log_this);
+  document.getElementById('d_r_log').textContent = fmt(r_log_this);
+  document.getElementById('d_r_nolog').textContent = `logistikasiz: ${fmt(r_nolog_this)} so'm`;
+
+  // Week cards
+  document.getElementById('d_date_this').innerHTML = d.date_this.replace(' - ','<br>– ');
+  document.getElementById('d_date_prev').innerHTML = d.date_prev.replace(' - ','<br>– ');
+  document.getElementById('w_xar_this').textContent = fmt(d.xar_this);
+  document.getElementById('w_log_this').textContent = fmt(d.log_this);
+  document.getElementById('w_tovar_this').textContent = fmt(d.tovar_this);
+  document.getElementById('w_xar_prev').textContent = fmt(d.xar_prev);
+  document.getElementById('w_log_prev').textContent = fmt(d.log_prev);
+  document.getElementById('w_tovar_prev').textContent = fmt(d.tovar_prev);
+  document.getElementById('b_nolog_this').textContent = fmt(r_nolog_this)+" so'm";
+  document.getElementById('b_log_this').textContent   = fmt(r_log_this)+" so'm";
+  document.getElementById('b_nolog_prev').textContent = fmt(r_nolog_prev)+" so'm";
+  document.getElementById('b_log_prev').textContent   = fmt(r_log_prev)+" so'm";
+
+  // Charts
+  const maxXar = Math.max(d.xar_this, d.xar_prev);
+  document.getElementById('chart_xar').innerHTML =
+    barHTML("Shu hafta", d.xar_this, maxXar, '#22c55e') +
+    barHTML("O'tgan hafta", d.xar_prev, maxXar, '#a855f7');
+  const maxLog = Math.max(d.log_this, d.log_prev);
+  document.getElementById('chart_log').innerHTML =
+    barHTML("Shu hafta", d.log_this, maxLog, '#22c55e') +
+    barHTML("O'tgan hafta", d.log_prev, maxLog, '#a855f7');
+  const maxR = Math.max(r_nolog_this, r_log_this, r_nolog_prev, r_log_prev);
+  const rBar = (lbl, val, color, style) => {
+    const pct = maxR>0?Math.round(val/maxR*100):0;
+    return `<div class="bar-item"><div class="bar-name" style="font-size:10px;${style}">${lbl}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"><span>${fmt(val)}</span></div></div></div>`;
+  };
+  document.getElementById('chart_ratio').innerHTML =
+    `<div style="font-size:10px;color:#94a3b8;margin-bottom:4px">Shu hafta</div>` +
+    rBar('Log.siz', r_nolog_this, '#22c55e','color:#16a34a') +
+    rBar('Log.bilan', r_log_this, '#f97316','color:#ea580c') +
+    `<div style="font-size:10px;color:#94a3b8;margin:8px 0 4px">O'tgan hafta</div>` +
+    rBar('Log.siz', r_nolog_prev, '#22c55e','color:#16a34a') +
+    rBar('Log.bilan', r_log_prev, '#f97316','color:#ea580c');
+
+  // Dept table
+  const deptTbody = document.getElementById('dept-tbody');
+  deptTbody.innerHTML = '';
+  const deptTotal = d.depts.reduce((a,b)=>a+b,0);
+  d.depts.forEach((v,i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${DEPT_NAMES[i]}</td><td>7</td><td>${fmt(v)}</td>`;
+    if(i%2===0) tr.style.background='#fafafa';
+    deptTbody.appendChild(tr);
+  });
+  const totTr = document.createElement('tr');
+  totTr.className='total';
+  totTr.innerHTML=`<td><b>Итого</b></td><td>7</td><td>${fmt(deptTotal)}</td>`;
+  deptTbody.appendChild(totTr);
+
+  // Pie xarajatlar
+  const logVal = d.log_this;
+  const pieVals = [...d.depts, logVal];
+  drawPie('pie-xar', pieVals, PIE_COLORS);
+  const pieTotal = pieVals.reduce((a,b)=>a+b,0);
+  const pieNames = [...DEPT_NAMES, 'Logistika'];
+  document.getElementById('legend-xar').innerHTML = pieNames.map((n,i)=>
+    `<div class="legend-item"><div class="legend-dot" style="background:${PIE_COLORS[i]}"></div>${n} — ${fmtM(pieVals[i])}</div>`
+  ).join('') + `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9;font-size:12px;font-weight:600;color:#0f172a">Jami: ${fmtM(pieTotal)}</div>`;
+
+  // Ratio cards
+  document.getElementById('ratio-cards').innerHTML = `
+    <div style="background:#f0fdf4;border-radius:12px;padding:16px;border:1px solid #86efac;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:11px;color:#64748b">Одежда + Обувь + Игрушка</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:4px">${fmt(d.tovar_this)} dona · ${fmt(d.xar_this)} so'm</div></div>
+      <div style="background:#22c55e;color:#fff;border-radius:10px;padding:12px 18px;text-align:center">
+        <div style="font-size:22px;font-weight:600;font-family:'DM Mono',monospace">${fmt(r_nolog_this)}</div>
+        <div style="font-size:10px">so'm/dona</div>
+      </div>
+    </div>
+    <div style="background:#fff7ed;border-radius:12px;padding:16px;border:1px solid #fed7aa;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:11px;color:#64748b">Одежда + Обувь + Игрушка + Logistika</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:4px">${fmt(d.tovar_this)} dona · ${fmt(d.xar_this+d.log_this)} so'm</div></div>
+      <div style="background:#f97316;color:#fff;border-radius:10px;padding:12px 18px;text-align:center">
+        <div style="font-size:22px;font-weight:600;font-family:'DM Mono',monospace">${fmt(r_log_this)}</div>
+        <div style="font-size:10px">so'm/dona</div>
+      </div>
+    </div>`;
+  const maxRatio = Math.max(r_nolog_this, r_log_this);
+  document.getElementById('ratio-bars').innerHTML =
+    `<div class="lbar-item"><div class="lbar-name">Log.siz</div><div class="lbar-track"><div class="lbar-fill" style="width:${maxRatio>0?Math.round(r_nolog_this/maxRatio*100):0}%;background:#22c55e"></div></div><div class="lbar-val">${fmt(r_nolog_this)} so'm/d</div></div>` +
+    `<div class="lbar-item"><div class="lbar-name">Log.bilan</div><div class="lbar-track"><div class="lbar-fill" style="width:100%;background:#f97316"></div></div><div class="lbar-val">${fmt(r_log_this)} so'm/d</div></div>`;
+
+  // Filials table
+  const ftbody = document.getElementById('filial-dash-tbody');
+  ftbody.innerHTML='';
+  let totSeb=0,totKar=0,totTov=0,totLogS=0;
+  d.filials.forEach((f,i)=>{
+    totSeb+=f[0];totKar+=f[1];totTov+=f[2];totLogS+=f[3];
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${FILIAL_NAMES[i]}</td><td>${fmt(f[0])}</td><td>${f[1]}</td><td>${fmt(f[2])}</td><td>${fmt(f[3])}</td>`;
+    if(i%2===0)tr.style.background='#fafafa';
+    ftbody.appendChild(tr);
+  });
+  const totTrF=document.createElement('tr');totTrF.className='total';
+  totTrF.innerHTML=`<td><b>Общий итог</b></td><td>${fmt(totSeb)}</td><td>${totKar}</td><td>${fmt(totTov)}</td><td>${fmt(totLogS)}</td>`;
+  ftbody.appendChild(totTrF);
+
+  // Lbar chart
+  const lbarDiv=document.getElementById('lbar-chart');
+  lbarDiv.innerHTML='';
+  const sorted=[...d.filials.map((f,i)=>({name:FILIAL_NAMES[i],log:f[3]}))].sort((a,b)=>b.log-a.log);
+  const maxL=sorted[0].log;
+  sorted.forEach(r=>{
+    const code=r.name.match(/S\d+/)?.[0]||'';
+    const pct=maxL>0?Math.round(r.log/maxL*100):0;
+    const div=document.createElement('div');
+    div.className='lbar-item';
+    div.innerHTML=`<div class="lbar-name" style="width:36px">${code}</div><div class="lbar-track"><div class="lbar-fill" style="width:${pct}%"></div></div><div class="lbar-val">${fmtM(r.log)}</div>`;
+    lbarDiv.appendChild(div);
+  });
+
+  // Otdel pie
+  const otdel_vals = [
+    d.filials.reduce((a,f)=>a+f[4],0),
+    d.filials.reduce((a,f)=>a+f[5],0),
+    d.filials.reduce((a,f)=>a+f[6],0),
+    d.filials.reduce((a,f)=>a+f[7],0),
+  ];
+  const otTotal = otdel_vals.reduce((a,b)=>a+b,0);
+  drawPie('pie-otdel', otdel_vals, OTDEL_COLORS);
+  const legOtdel = document.getElementById('legend-otdel');
+  legOtdel.innerHTML = OTDEL_NAMES.map((n,i)=>{
+    const pct = otTotal>0?Math.round(otdel_vals[i]/otTotal*100):0;
+    return `<div class="legend-item"><span class="pill" style="background:${OTDEL_COLORS[i]}22;color:${OTDEL_COLORS[i]};font-size:11px">${pct}%</span><div class="legend-dot" style="background:${OTDEL_COLORS[i]};margin-left:4px"></div>${n} — ${fmt(otdel_vals[i])}</div>`;
+  }).join('') + `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9;font-size:12px;font-weight:600;color:#0f172a">Jami: ${fmt(otTotal)}</div>`;
+
+  // Otdel table
+  const otTbl = document.getElementById('otdel-tbl-body');
+  otTbl.innerHTML='';
+  OTDEL_NAMES.forEach((n,i)=>{
+    const pct=otTotal>0?Math.round(otdel_vals[i]/otTotal*100):0;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${n}</td><td>${fmt(otdel_vals[i])}</td><td><span class="pill" style="background:${OTDEL_COLORS[i]}22;color:${OTDEL_COLORS[i]}">${pct}%</span></td>`;
+    if(i%2===0)tr.style.background='#fafafa';
+    otTbl.appendChild(tr);
+  });
+  const otTotTr=document.createElement('tr');otTotTr.className='total';
+  otTotTr.innerHTML=`<td><b>Jami</b></td><td>${fmt(otTotal)}</td><td><span class="pill" style="background:#f1f5f9;color:#475569">100%</span></td>`;
+  otTbl.appendChild(otTotTr);
+
+  // Kategoriyalar
+  const katTotal = d.katVals.reduce((a,b)=>a+b,0);
+  const katTbody = document.getElementById('kat-tbody');
+  katTbody.innerHTML='';
+  const katSorted = d.katVals.map((v,i)=>({name:KAT_NAMES[i],val:v,color:KAT_COLORS[i]})).sort((a,b)=>b.val-a.val);
+  katSorted.forEach((k,i)=>{
+    const pct = katTotal>0?Math.round(k.val/katTotal*100):0;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-weight:500">${k.name}</td><td>${fmt(k.val)}</td><td><span class="pill" style="background:${k.color}22;color:${k.color}">${pct}%</span></td>`;
+    if(i%2===0)tr.style.background='#fafafa';
+    katTbody.appendChild(tr);
+  });
+  const katTotTr=document.createElement('tr');katTotTr.className='total';
+  katTotTr.innerHTML=`<td><b>Общий итог</b></td><td>${fmt(katTotal)}</td><td><span class="pill" style="background:#f1f5f9;color:#475569">100%</span></td>`;
+  katTbody.appendChild(katTotTr);
+
+  const katBarsDiv=document.getElementById('kat-bars');
+  katBarsDiv.innerHTML='';
+  const maxKat=katSorted[0]?.val||1;
+  katSorted.forEach(k=>{
+    const pct=Math.round(k.val/maxKat*100);
+    const div=document.createElement('div');
+    div.className='lbar-item';
+    div.style.marginBottom='6px';
+    div.innerHTML=`<div style="font-size:11px;color:#64748b;width:80px;flex-shrink:0;text-align:right">${k.name}</div>
+      <div class="lbar-track" style="margin-left:8px"><div class="lbar-fill" style="width:${pct}%;background:${k.color}"></div></div>
+      <div class="lbar-val">${fmt(k.val)}</div>`;
+    katBarsDiv.appendChild(div);
+  });
+
+  // Filials otdel table
+  const ofTbody=document.getElementById('otdel-filial-tbody');
+  ofTbody.innerHTML='';
+  d.filials.forEach((f,i)=>{
+    const total=f[4]+f[5]+f[6]+f[7];
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${FILIAL_NAMES[i]}</td><td>${fmt(f[4])}</td><td>${fmt(f[5])}</td><td>${fmt(f[6])}</td><td>${fmt(f[7])}</td><td style="font-weight:600">${fmt(total)}</td>`;
+    if(i%2===0)tr.style.background='#fafafa';
+    ofTbody.appendChild(tr);
+  });
+  const ofTot=[4,5,6,7].map(c=>d.filials.reduce((a,f)=>a+f[c],0));
+  const ofTotTr=document.createElement('tr');ofTotTr.className='total';
+  ofTotTr.innerHTML=`<td><b>Общий итог</b></td>${ofTot.map(v=>`<td>${fmt(v)}</td>`).join('')}<td>${fmt(ofTot.reduce((a,b)=>a+b,0))}</td>`;
+  ofTbody.appendChild(ofTotTr);
+}
+
+// ── PASTE HANDLER ─────────────────────────────────────────────
+// Parses Excel tab-separated clipboard data and fills inputs
+function parseClipboard(text){
+  return text.trim().split(/\r?\n/).map(row =>
+    row.split('\t').map(cell => cell.trim().replace(/\s/g,'').replace(',','.'))
+  );
+}
+
+function cleanNum(s){
+  // remove spaces, non-breaking spaces, thousand separators, handle comma decimals
+  return s.replace(/[\s\u00a0]/g,'').replace(/,/g,'.').replace(/[^0-9.\-]/g,'');
+}
+
+document.addEventListener('paste', function(e){
+  const active = document.activeElement;
+  if(!active || !active.classList.contains('paste-cell')) return;
+
+  const text = (e.clipboardData || window.clipboardData).getData('text');
+  if(!text.includes('\t') && !text.includes('\n')){
+    // single cell — just let default happen
+    return;
+  }
+  e.preventDefault();
+
+  const rows = parseClipboard(text);
+  const startRow = parseInt(active.dataset.row) || 0;
+  const startCol = parseInt(active.dataset.col) || 0;
+  const tbl = active.closest('table');
+
+  // Get all inputs in this table ordered by row/col
+  const allInputs = Array.from(tbl.querySelectorAll('input.paste-cell'));
+
+  // Build a map: row->col->input
+  const map = {};
+  allInputs.forEach(inp => {
+    const r = parseInt(inp.dataset.row);
+    const c = parseInt(inp.dataset.col);
+    if(!map[r]) map[r] = {};
+    map[r][c] = inp;
+  });
+
+  let filled = 0;
+  rows.forEach((rowData, ri) => {
+    rowData.forEach((val, ci) => {
+      const r = startRow + ri;
+      const c = startCol + ci;
+      if(map[r] && map[r][c]){
+        const inp = map[r][c];
+        const cleaned = cleanNum(val);
+        inp.value = cleaned || val;
+        inp.classList.add('flashed');
+        setTimeout(()=>inp.classList.remove('flashed'), 800);
+        filled++;
+      }
+    });
+  });
+
+  // Also handle filial table (special structure — no data-row on regular cells for filials)
+  // Already handled via filial-input-tbl separate logic below
+  if(filled > 0){
+    showPasteToast(filled);
+  }
+});
+
+// Filial table paste — uses focused cell position in table
+document.addEventListener('paste', function(e){
+  const active = document.activeElement;
+  if(!active) return;
+  const tbl = active.closest('.filial-input-tbl');
+  if(!tbl) return;
+
+  const text = (e.clipboardData || window.clipboardData).getData('text');
+  if(!text.includes('\t') && !text.includes('\n')) return;
+  e.preventDefault();
+
+  const rows = parseClipboard(text);
+  // Find focused cell position
+  const allRows = Array.from(tbl.querySelectorAll('tbody tr'));
+  const allInputsFlat = [];
+  allRows.forEach((tr, ri) => {
+    Array.from(tr.querySelectorAll('input')).forEach((inp, ci) => {
+      allInputsFlat.push({inp, ri, ci});
+    });
+  });
+
+  // find start row/col
+  let startRi = 0, startCi = 0;
+  allRows.forEach((tr, ri) => {
+    const inputs = Array.from(tr.querySelectorAll('input'));
+    inputs.forEach((inp, ci) => {
+      if(inp === active){ startRi = ri; startCi = ci; }
+    });
+  });
+
+  // Build 2D map
+  const grid = {};
+  allRows.forEach((tr, ri) => {
+    grid[ri] = Array.from(tr.querySelectorAll('input'));
+  });
+
+  let filled = 0;
+  rows.forEach((rowData, ri) => {
+    rowData.forEach((val, ci) => {
+      const r = startRi + ri;
+      const c = startCi + ci;
+      if(grid[r] && grid[r][c]){
+        const inp = grid[r][c];
+        const cleaned = cleanNum(val);
+        inp.value = cleaned || val;
+        inp.classList.add('flashed');
+        setTimeout(()=>inp.classList.remove('flashed'), 800);
+        filled++;
+      }
+    });
+  });
+  if(filled > 0) showPasteToast(filled);
+});
+
+function showPasteToast(n){
+  let t = document.getElementById('paste-toast');
+  if(!t){
+    t = document.createElement('div');
+    t.id='paste-toast';
+    t.style.cssText='position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;transition:opacity .3s';
+    document.body.appendChild(t);
+  }
+  t.textContent = `✓ ${n} ta katakcha to'ldirildi`;
+  t.style.opacity='1';
+  clearTimeout(t._tid);
+  t._tid = setTimeout(()=>t.style.opacity='0', 2500);
+}
+
+// ── SAVE / LOAD (localStorage) ────────────────────────────────
+function saveToStorage(){
+  const ids = ['i_date_this','i_date_prev','i_xar_this','i_log_this','i_tovar_this',
+    'i_xar_prev','i_log_prev','i_tovar_prev','i_karobki',
+    'i_d1','i_d2','i_d3','i_d4','i_d5',
+    ...KAT_IDS];
+  const saved = {};
+  ids.forEach(id => { const el=document.getElementById(id); if(el) saved[id]=el.value; });
+  // filial inputs
+  const fiArr = FILIAL_NAMES.map((_,i) =>
+    Array.from({length:8},(_,c)=>{
+      const el=document.querySelector(`.fi[data-i="${i}"][data-c="${c}"]`);
+      return el?el.value:'';
+    })
+  );
+  saved['__filials__'] = JSON.stringify(fiArr);
+  localStorage.setItem('hisobot_data', JSON.stringify(saved));
+}
+
+function loadFromStorage(){
+  const raw = localStorage.getItem('hisobot_data');
+  if(!raw) return false;
+  try {
+    const saved = JSON.parse(raw);
+    Object.entries(saved).forEach(([id,val])=>{
+      if(id==='__filials__') return;
+      const el=document.getElementById(id);
+      if(el) el.value=val;
+    });
+    if(saved['__filials__']){
+      const fiArr = JSON.parse(saved['__filials__']);
+      fiArr.forEach((row,i)=>{
+        row.forEach((val,c)=>{
+          const el=document.querySelector(`.fi[data-i="${i}"][data-c="${c}"]`);
+          if(el) el.value=val;
+        });
+      });
+    }
+    return true;
+  } catch(e){ return false; }
+}
+
+// ── APPLY & SWITCH ────────────────────────────────────────────
+function applyData(){
+  saveToStorage();
+  render(getData());
+  switchTab('dashboard');
+  const badge = document.getElementById('saved-badge');
+  badge.style.display='flex';
+  setTimeout(()=>badge.style.display='none', 3000);
+}
+
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active', (i===0&&name==='dashboard')||(i===1&&name==='input')));
+  document.getElementById('tab-dashboard').classList.toggle('active', name==='dashboard');
+  document.getElementById('tab-input').classList.toggle('active', name==='input');
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+buildInputTable();
+loadFromStorage();
+render(getData());
+</script>
+</body>
+</html>
